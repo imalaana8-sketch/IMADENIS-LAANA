@@ -3,7 +3,7 @@ import pandas as pd
 import google.generativeai as genai
 
 # Masukkan API Key kamu langsung di sini
-API_KEY = "AIzaSyDmB0zKl1df5Dvv46ENH2RMpg3LKU8qi3U"
+API_KEY = AIzaSyDmB0zKI1df5Dvv46ENH2RMpg3LKU8qi3U
 
 # Inisialisasi Google AI
 genai.configure(api_key=API_KEY)
