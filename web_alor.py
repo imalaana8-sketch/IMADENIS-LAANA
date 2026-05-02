@@ -2,14 +2,16 @@ import streamlit as st
 import pandas as pd
 import google.generativeai as genai
 
-# KONFIGURASI: Ganti teks di bawah dengan kode AIzaSy... yang kamu copy tadi
-API_KEY = "AIzaSyDmB0zKI1df5Dvv46ENH2RMpg3LKU8qi3U"
+# Masukkan API Key kamu langsung di sini
+API_KEY = "AIzaSyDmB0zKl1df5Dvv46ENH2RMpg3LKU8qi3U"
+
+# Inisialisasi Google AI
 genai.configure(api_key=API_KEY)
 model = genai.GenerativeModel('gemini-pro')
 
 st.set_page_config(page_title="Alor.GPT - Super AI", layout="centered")
 
-# CSS agar tampilan hitam elegan
+# Tampilan Hitam Elegan
 st.markdown("""
     <style>
     .stApp { background-color: #0d0d0d; }
@@ -21,20 +23,20 @@ st.markdown("""
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+# Tampilkan riwayat chat
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-if prompt := st.chat_input("Tanya apa saja ke Alor.GPT..."):
+# Input Chat
+if prompt := st.chat_input("Tanya apa saja..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        response_placeholder = st.empty()
+        # Jalankan pencarian data mahasiswa UNTRIB dulu
         full_response = ""
-        
-        # 1. Cek Data Mahasiswa UNTRIB
         try:
             df = pd.read_csv("mahasiswa_untrib.csv")
             hasil = df[df.apply(lambda row: prompt.lower() in row.astype(str).str.lower().values, axis=1)]
@@ -43,13 +45,14 @@ if prompt := st.chat_input("Tanya apa saja ke Alor.GPT..."):
         except:
             pass
 
-        # 2. Jika bukan data lokal, tanya Otak Gemini AI
+        # Jika bukan data mahasiswa, tanya AI Gemini
         if not full_response:
             try:
                 response = model.generate_content(prompt)
                 full_response = response.text
-            except:
-                full_response = "Maaf, ada kendala pada koneksi otak AI saya."
+            except Exception as e:
+                # Menampilkan pesan eror asli agar kita tahu masalahnya (misal: API Key salah/limit)
+                full_response = f"Eror Sistem AI: {str(e)}"
 
-        response_placeholder.markdown(full_response)
+        st.markdown(full_response)
         st.session_state.messages.append({"role": "assistant", "content": full_response})
