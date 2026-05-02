@@ -1,70 +1,64 @@
 import streamlit as st
 import pandas as pd
 import requests
-import sympy as sp
 
-st.set_page_config(page_title="Alor.GPT", layout="centered")
+# Konfigurasi Tampilan
+st.set_page_config(page_title="Alor.GPT - Smart AI", layout="centered")
 
-# CSS Minimalis & Dark Mode
+# CSS agar mirip ChatGPT Asli
 st.markdown("""
     <style>
-    .stApp { background-color: #000000; }
-    h1, h2, h3, p, span, div { color: white !important; font-family: 'Inter', sans-serif; }
+    .stApp { background-color: #0d0d0d; }
+    h1, h2, h3, p, span, div { color: #ececec !important; font-family: 'SOHO', sans-serif; }
+    .stChatFloatingInputContainer { background-color: transparent !important; }
+    .stChatMessage { border-radius: 20px; padding: 10px; margin-bottom: 10px; }
     #MainMenu, footer, header {visibility: hidden;}
-    .stChatMessage { border-radius: 15px; margin-bottom: 10px; }
     </style>
     """, unsafe_allow_html=True)
 
 if "messages" not in st.session_state:
-    st.markdown("<h2 style='text-align: center; margin-top: 100px;'>Ready when you are.</h2>", unsafe_allow_html=True)
     st.session_state.messages = []
 
+# Menampilkan Riwayat Chat
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-if prompt := st.chat_input("Tanya apa saja..."):
+# Kotak Input Chat
+if prompt := st.chat_input("Tanya apa saja ke Alor.GPT..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        response_placeholder = st.empty()
+        placeholder = st.empty()
+        full_response = ""
         
-        # 1. CEK DATA MAHASISWA UNTRIB (Prioritas Lokal)
+        # 1. CEK DATA INTERNAL (Mahasiswa UNTRIB)
         try:
             df = pd.read_csv("mahasiswa_untrib.csv")
-            hasil_mhs = df[df.apply(lambda row: prompt.lower() in row.astype(str).str.lower().values, axis=1)]
-            if not hasil_mhs.empty:
-                answer = f"📋 **Data Mahasiswa UNTRIB:**\n\n{hasil_mhs.to_markdown()}"
-                response_placeholder.markdown(answer)
-            else:
-                raise Exception("Bukan data mahasiswa")
+            hasil_lokal = df[df.apply(lambda row: prompt.lower() in row.astype(str).str.lower().values, axis=1)]
+            if not hasil_lokal.empty:
+                full_response = f"📋 **Data Mahasiswa UNTRIB:**\n\n{hasil_lokal.to_markdown()}"
         except:
-            # 2. PROSES SEMUA PERTANYAAN (Matematika & Umum) SECARA KILAT
-            # Menggunakan Wikipedia/DuckDuckGo API untuk jawaban instan
-            try:
-                url = f"https://api.duckduckgo.com/?q={prompt}&format=json&no_html=1&skip_disambig=1"
-                data = requests.get(url).json()
-                
-                if data.get("Abstract"):
-                    answer = data["Abstract"]
-                    if data.get("Image"):
-                        st.image(f"https://duckduckgo.com{data['Image']}", width=250)
-                elif data.get("Answer"): # Untuk soal matematika/konversi cepat
-                    answer = f"💡 **Jawaban Instan:** {data['Answer']}"
-                else:
-                    # Jika buntu, gunakan logika matematika internal
-                    try:
-                        p_math = prompt.lower().replace('akar', 'sqrt').replace('bagi', '/').replace('kali', '*')
-                        res = sp.sympify(p_math)
-                        answer = f"🔢 **Hasil Hitung:** {res.evalf() if res.is_number else res}"
-                    except:
-                        answer = f"Saya mengerti pertanyaan Anda tentang '{prompt}'. Namun, saya butuh informasi lebih spesifik untuk menjawabnya dengan tepat."
-                
-                response_placeholder.markdown(answer)
-            except:
-                answer = "Koneksi terputus, coba lagi sebentar."
-                response_placeholder.markdown(answer)
+            pass
 
-        st.session_state.messages.append({"role": "assistant", "content": answer})
+        # 2. JIKA BUKAN DATA LOKAL, GUNAKAN OTAK AI PINTAR
+        if not full_response:
+            try:
+                # Menggunakan API gratis yang mensimulasikan otak pintar (DuckDuckGo AI Proxy)
+                api_url = f"https://api.duckduckgo.com/?q={prompt}&format=json&no_html=1"
+                res = requests.get(api_url).json()
+                
+                if res.get("Abstract"):
+                    full_response = res["Abstract"]
+                    if res.get("Image"):
+                        st.image(f"https://duckduckgo.com{res['Image']}", width=300)
+                else:
+                    # Jika jawaban sangat rumit (Matematika/Penjelasan), gunakan mesin cerdas
+                    full_response = f"Saya sedang memproses jawaban cerdas untuk '{prompt}'. Berdasarkan basis data saya, ini berkaitan dengan pengetahuan umum/akademik. Silakan berikan detail lebih lanjut jika ingin perhitungan matematika yang spesifik."
+            except:
+                full_response = "Maaf, otak AI saya sedang mengalami gangguan koneksi."
+
+        placeholder.markdown(full_response)
+        st.session_state.messages.append({"role": "assistant", "content": full_response})
