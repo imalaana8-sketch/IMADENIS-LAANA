@@ -46,7 +46,7 @@ st.markdown("""
     /* Sembunyikan elemen Streamlit yang tidak perlu */
     #MainMenu, footer, header {visibility: hidden;}
     </style>
-    """, unsafe_allow_index=True)
+    """, unsafe_allow_html=True)
 
 # Teks Utama di Tengah
 st.markdown('<div class="centered-text">Ready when you are.</div>', unsafe_allow_html=True)
