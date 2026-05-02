@@ -1,54 +1,31 @@
 import streamlit as st
-import pandas as pd
 import google.generativeai as genai
 from PIL import Image
-import datetime
 
-# 1. KONFIGURASI API
-API_KEY = "AIzaSyBjbovFThftju3DzAIRc2rpyFd3SJTVOHA"
+# Pastikan API KEY terbaru kamu sudah di sini
+API_KEY = "MASUKKAN_API_KEY_BARU_DI_SINI"
 genai.configure(api_key=API_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash')
 
-st.set_page_config(page_title="Alor.GPT Pro Max - Studio Kreatif", layout="wide")
+# Fungsi untuk memilih model yang tersedia secara otomatis
+def muat_model():
+    # Daftar model dari yang terbaru ke yang paling stabil
+    daftar_model = ['gemini-1.5-flash', 'gemini-pro']
+    for nama in daftar_model:
+        try:
+            model_uji = genai.GenerativeModel(nama)
+            # Tes panggil model
+            return model_uji
+        except:
+            continue
+    return None
 
-# 2. TAMPILAN INTERFACE (STYLE STUDIO)
-st.markdown("""
-    <style>
-    .stApp { background-color: #0d1117; color: #c9d1d9; }
-    .report-box { padding: 20px; border-radius: 10px; border: 1px solid #30363d; background-color: #161b22; margin-bottom: 10px; }
-    .stButton>button { width: 100%; border-radius: 5px; background-color: #238636; color: white; }
-    </style>
-    """, unsafe_allow_html=True)
+model = muat_model()
 
-# 3. SIDEBAR: TOOLS KREATIF & DOKUMEN
-with st.sidebar:
-    st.title("🎨 Alor Studio")
-    
-    # Fitur Unggah Multi-Fungsi
-    uploaded_file = st.file_uploader(
-        "Unggah Foto atau Dokumen", 
-        type=['png', 'jpg', 'jpeg', 'pdf', 'docx', 'xlsx', 'pptx']
-    )
-    
-    if uploaded_file:
-        st.success(f"File '{uploaded_file.name}' siap diproses!")
-        if uploaded_file.type in ["image/png", "image/jpeg"]:
-            st.image(Image.open(uploaded_file), caption="Preview Foto")
+st.set_page_config(page_title="NIMANG - Wolatang Bersejarah", layout="centered")
 
-    st.divider()
-    st.subheader("🛠️ Fitur Edit Otomatis")
-    mode_edit = st.selectbox("Pilih Aksi Kreatif:", [
-        "Analisis Teks & Dokumen",
-        "Ubah Foto ke Anime/Kartun",
-        "Perbaiki Foto Buram (Enhance)",
-        "Ganti Background Foto",
-        "Ubah Foto Jadi Video Gerak",
-        "Video + Suara (Text-to-Speech)"
-    ])
-
-# 4. TAMPILAN UTAMA
-st.title("🤖 NIMANG")
-st.caption(f"WOLATANG BERSEJARAH | {datetime.date.today().strftime('%d %B %Y')}")
+# Tampilan Header sesuai screenshot kamu
+st.title("🌚 NIMANG")
+st.caption("WOLATANG BERSEJARAH | 02 May 2026")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -57,44 +34,18 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# 5. LOGIKA PEMROSESAN SUPER AI
-if prompt := st.chat_input("Berikan instruksi (contoh: 'Ganti background ke pantai' atau 'Buat makalah')"):
+if prompt := st.chat_input("Tanya apa saja..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        full_response = ""
-        
-        # Konteks Khusus Studio Kreatif
-        context = f"""
-        Kamu adalah Alor.GPT Studio Kreatif. 
-        Tugas:
-        1. Mode Anime/Video: Jelaskan cara AI memproses transformasi visual dari foto ke anime.
-        2. Mode Enhance: Berikan instruksi teknis untuk menajamkan bagian foto yang buram.
-        3. Background: Simulasikan perubahan latar belakang sesuai permintaan user.
-        4. Text-to-Video: Buatkan naskah dan deskripsi gerakan video beserta narasi suara yang sesuai ketikan user.
-        5. Akademik: Tetap sediakan fitur Makalah Bab 1-3 lengkap dengan sumber dan catatan kaki.
-        """
-
-        try:
-            if uploaded_file:
-                # Memproses Foto/Dokumen dengan instruksi edit
-                response = model.generate_content([f"MODE: {mode_edit}. INSTRUKSI: {prompt}. CONTEXT: {context}", Image.open(uploaded_file) if "image" in uploaded_file.type else uploaded_file.name])
-            else:
-                response = model.generate_content(context + prompt)
-            
-            full_response = response.text
-            
-            # Tampilan hasil eksklusif
-            if "Video" in mode_edit or "Anime" in mode_edit:
-                st.info(f"✨ Memproses Mode: {mode_edit}...")
-                st.markdown(f'<div class="report-box"><b>Hasil Studio:</b><br>{full_response}</div>', unsafe_allow_html=True)
-            else:
-                st.markdown(full_response)
-                
-        except Exception as e:
-            full_response = f"⚠️ Kendala Studio: {str(e)}"
-            st.markdown(full_response)
-
-        st.session_state.messages.append({"role": "assistant", "content": full_response})
+        if model is None:
+            st.error("Gagal memuat model AI. Periksa kembali API Key atau koneksi server.")
+        else:
+            try:
+                response = model.generate_content(prompt)
+                st.markdown(response.text)
+                st.session_state.messages.append({"role": "assistant", "content": response.text})
+            except Exception as e:
+                st.error(f"Kendala Studio: {str(e)}")
