@@ -3,7 +3,7 @@ import pandas as pd
 import google.generativeai as genai
 
 # Inisialisasi API
-API_KEY = "AIzaSyDmB0zKl1df5Dvv46ENH2RMpg3LKU8qi3U"
+API_KEY = "AIzaSyDkTBGovE1LriT4e21ia2EhPa1DLLOq0Ho"
 genai.configure(api_key=API_KEY)
 
 # Mencoba menggunakan model yang paling tersedia (Flash Terbaru)
