@@ -2,53 +2,80 @@ import streamlit as st
 import pandas as pd
 import requests
 
-st.set_page_config(page_title="Alor.GPT - UNTRIB", layout="wide")
+# Konfigurasi halaman agar berwarna gelap dan minimalis
+st.set_page_config(page_title="Alor.GPT", layout="centered")
 
-st.title("Alor.GPT 🚀")
-st.write("Sistem Informasi Mahasiswa Universitas Tribuana Kalabahi")
+# CSS untuk membuat tampilan mirip ChatGPT (Latar belakang hitam, teks putih, input melayang)
+st.markdown("""
+    <style>
+    .main {
+        background-color: #000000;
+    }
+    .stApp {
+        background-color: #000000;
+    }
+    h1, h2, h3, p, span, div {
+        color: white !important;
+        font-family: 'Inter', sans-serif;
+    }
+    /* Mengatur posisi teks di tengah */
+    .centered-text {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 50vh;
+        font-size: 24px;
+        font-weight: 500;
+    }
+    /* Mengatur kotak input di bawah */
+    .stTextInput {
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80% !important;
+        z-index: 100;
+    }
+    input {
+        background-color: #212121 !important;
+        border: 1px solid #424242 !important;
+        color: white !important;
+        border-radius: 25px !important;
+        padding: 15px 25px !important;
+    }
+    /* Sembunyikan elemen Streamlit yang tidak perlu */
+    #MainMenu, footer, header {visibility: hidden;}
+    </style>
+    """, unsafe_allow_index=True)
 
-# Mode Pencarian
-mode = st.radio("Pilih Mode Pencarian:", ["Cari Data Mahasiswa UNTRIB", "Cari di Google"])
+# Teks Utama di Tengah
+st.markdown('<div class="centered-text">Ready when you are.</div>', unsafe_allow_html=True)
 
-query = st.text_input("Ketikkkan pencarian...")
-tombol = st.button("Kirim")
+# Kotak Input di Bawah (Mirip "Ask anything")
+query = st.text_input("", placeholder="Ask anything...", key="user_input")
 
-if tombol and query:
-    if mode == "Cari di Google":
-        st.subheader(f"🔎 Hasil Pencarian untuk: {query}")
+# Logika Pencarian
+if query:
+    st.write("---")
+    st.write(f"### Hasil untuk: {query}")
+    
+    # Fungsi pencarian ke file CSV Mahasiswa UNTRIB
+    try:
+        df = pd.read_csv("mahasiswa_untrib.csv")
+        hasil = df[df.apply(lambda row: query.lower() in row.astype(str).str.lower().values, axis=1)]
         
-        # Menggunakan API DuckDuckGo (Gratis dan Mudah untuk Pemula)
-        url = f"https://api.duckduckgo.com/?q={query}&format=json&pretty=1"
-        response = requests.get(url).json()
-        
-        # Menampilkan Gambar Utama jika ada
-        if response.get("Image"):
-            st.image(f"https://duckduckgo.com{response['Image']}", caption=query, width=300)
-        
-        # Menampilkan Deskripsi/Abstrak
-        if response.get("Abstract"):
-            st.info(response["Abstract"])
-            st.write(f"Sumber: {response.get('AbstractURL')}")
+        if not hasil.empty:
+            st.table(hasil)
         else:
-            st.warning("Maaf, detail teks tidak ditemukan. Coba kata kunci lain.")
+            # Jika tidak ada di CSV, coba cari info umum (Simulasi Gambar)
+            url = f"https://api.duckduckgo.com/?q={query}&format=json"
+            response = requests.get(url).json()
             
-        # Menampilkan Topik Terkait (Related Topics)
-        st.write("---")
-        st.write("### Topik Terkait:")
-        for topic in response.get("RelatedTopics", [])[:3]:
-            if "Text" in topic:
-                st.write(f"- {topic['Text']}")
-
-    elif mode == "Cari Data Mahasiswa UNTRIB":
-        # Bagian ini mengambil data dari file csv yang sudah kamu upload di GitHub
-        try:
-            df = pd.read_csv("mahasiswa_untrib.csv")
-            hasil = df[df.apply(lambda row: query.lower() in row.astype(str).str.lower().values, axis=1)]
-            
-            if not hasil.empty:
-                st.success(f"Ditemukan {len(hasil)} data mahasiswa!")
-                st.table(hasil)
+            if response.get("Abstract"):
+                if response.get("Image"):
+                    st.image(f"https://duckduckgo.com{response['Image']}", width=300)
+                st.info(response["Abstract"])
             else:
-                st.error("Data mahasiswa tidak ditemukan.")
-        except:
-            st.error("File mahasiswa_untrib.csv tidak ditemukan di server.")
+                st.write("Mencari informasi lebih lanjut...")
+    except:
+        st.error("Pastikan file mahasiswa_untrib.csv sudah ada di GitHub kamu.")
