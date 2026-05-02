@@ -4,7 +4,7 @@ from PIL import Image
 import datetime
 
 # 1. KONFIGURASI API (Gunakan API Key terbaru kamu)
-API_KEY = "GANTI_DENGAN_API_KEY_BARU_KAMU"
+API_KEY = "AIzaSyDoitjL5tP9e45f1RROjdz4mnchIVgRreg"
 genai.configure(api_key=API_KEY)
 
 # 2. PENGATURAN MINICON (FAVICON) & PAGE
