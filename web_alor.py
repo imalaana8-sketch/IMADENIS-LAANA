@@ -5,7 +5,7 @@ from PIL import Image
 import datetime
 
 # 1. KONFIGURASI API
-API_KEY = "AIzaSyDmB0zKl1df5Dvv46ENH2RMpg3LKU8qi3U"
+API_KEY = "AIzaSyAPKCpyGVUdNCRTziIP_l4y8fZc2CRwU7I"
 genai.configure(api_key=API_KEY)
 model = genai.GenerativeModel('gemini-1.5-flash')
 
