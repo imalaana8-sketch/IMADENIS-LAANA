@@ -7,7 +7,7 @@ API_KEY = "AIzaSyDmB0zKI1df5Dvv46ENH2RMpg3LKU8qi3U"
 
 # Inisialisasi Google AI
 genai.configure(api_key=API_KEY)
-model = genai.GenerativeModel('gemini-pro')
+model = genai.GenerativeModel('gemini-1,5-flash')
 
 st.set_page_config(page_title="Alor.GPT - Super AI", layout="centered")
 
