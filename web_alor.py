@@ -3,13 +3,13 @@ import google.generativeai as genai
 from PIL import Image
 
 # Pastikan API KEY terbaru kamu sudah di sini
-API_KEY = "MASUKKAN_API_KEY_BARU_DI_SINI"
+API_KEY = "AIzaSyC7tir9Es8qIrYbq2BHNmgDdmQmeV05Xc4"
 genai.configure(api_key=API_KEY)
 
 # Fungsi untuk memilih model yang tersedia secara otomatis
 def muat_model():
     # Daftar model dari yang terbaru ke yang paling stabil
-    daftar_model = ['gemini-1.5-flash', 'gemini-pro']
+    daftar_model = ['models/gemini-pro']
     for nama in daftar_model:
         try:
             model_uji = genai.GenerativeModel(nama)
