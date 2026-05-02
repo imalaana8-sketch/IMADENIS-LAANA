@@ -3,7 +3,7 @@ import google.generativeai as genai
 import datetime
 
 # PASTIIN API KEY BARU KAMU SUDAH DI SINI
-API_KEY = "TEMPEL_API_KEY_KAMU_DI_SINI"
+API_KEY = "AIzaSyDwU3k_Q1ZMUeeGMn3GYf7PE16n41cIDjw"
 genai.configure(api_key=API_KEY)
 
 # FUNGSI ANTI-404: Mencoba semua kemungkinan nama model
