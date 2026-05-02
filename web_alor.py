@@ -3,67 +3,68 @@ import pandas as pd
 import requests
 import sympy as sp
 
-# Konfigurasi halaman
 st.set_page_config(page_title="Alor.GPT", layout="centered")
 
-# CSS untuk tampilan Dark Mode Total & Minimalis
+# CSS Minimalis & Dark Mode
 st.markdown("""
     <style>
     .stApp { background-color: #000000; }
     h1, h2, h3, p, span, div { color: white !important; font-family: 'Inter', sans-serif; }
-    .stChatFloatingInputContainer { background-color: transparent !important; }
-    .stChatMessage { background-color: #1a1a1a !important; border-radius: 15px; }
     #MainMenu, footer, header {visibility: hidden;}
+    .stChatMessage { border-radius: 15px; margin-bottom: 10px; }
     </style>
     """, unsafe_allow_html=True)
 
-# Judul Utama di Tengah
 if "messages" not in st.session_state:
-    st.markdown("<h2 style='text-align: center; margin-top: 150px;'>Ready when you are.</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; margin-top: 100px;'>Ready when you are.</h2>", unsafe_allow_html=True)
     st.session_state.messages = []
 
-# Menampilkan riwayat chat agar jawaban tidak hilang
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# FITUR UTAMA: Tombol Kirim Otomatis (st.chat_input)
-# Catatan: Untuk Mic, browser HP biasanya sudah menyediakan ikon mic di keyboard Android kamu
-if prompt := st.chat_input("Ask anything..."):
-    # Tampilkan pesan user
+if prompt := st.chat_input("Tanya apa saja..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # Proses Jawaban Kilat
     with st.chat_message("assistant"):
-        response_container = st.empty()
+        response_placeholder = st.empty()
         
-        # 1. Cek Matematika (Sangat Cepat)
+        # 1. CEK DATA MAHASISWA UNTRIB (Prioritas Lokal)
         try:
-            # Membersihkan input dari simbol aneh seperti 'x' menjadi '*'
-            clean_prompt = prompt.replace('×', '*').replace(':', '/')
-            res_math = sp.sympify(clean_prompt)
-            answer = f"🔢 **Hasil:** {res_math.evalf() if res_math.is_number else res_math}"
+            df = pd.read_csv("mahasiswa_untrib.csv")
+            hasil_mhs = df[df.apply(lambda row: prompt.lower() in row.astype(str).str.lower().values, axis=1)]
+            if not hasil_mhs.empty:
+                answer = f"📋 **Data Mahasiswa UNTRIB:**\n\n{hasil_mhs.to_markdown()}"
+                response_placeholder.markdown(answer)
+            else:
+                raise Exception("Bukan data mahasiswa")
         except:
-            # 2. Cek Data Mahasiswa UNTRIB
+            # 2. PROSES SEMUA PERTANYAAN (Matematika & Umum) SECARA KILAT
+            # Menggunakan Wikipedia/DuckDuckGo API untuk jawaban instan
             try:
-                df = pd.read_csv("mahasiswa_untrib.csv")
-                hasil = df[df.apply(lambda row: prompt.lower() in row.astype(str).str.lower().values, axis=1)]
-                if not hasil.empty:
-                    answer = f"📋 **Data Ditemukan:**\n\n{hasil.to_markdown()}"
+                url = f"https://api.duckduckgo.com/?q={prompt}&format=json&no_html=1&skip_disambig=1"
+                data = requests.get(url).json()
+                
+                if data.get("Abstract"):
+                    answer = data["Abstract"]
+                    if data.get("Image"):
+                        st.image(f"https://duckduckgo.com{data['Image']}", width=250)
+                elif data.get("Answer"): # Untuk soal matematika/konversi cepat
+                    answer = f"💡 **Jawaban Instan:** {data['Answer']}"
                 else:
-                    # 3. Pencarian Visual Google/DuckDuckGo
-                    url = f"https://api.duckduckgo.com/?q={prompt}&format=json"
-                    resp = requests.get(url).json()
-                    if resp.get("Abstract"):
-                        answer = resp["Abstract"]
-                        if resp.get("Image"):
-                            st.image(f"https://duckduckgo.com{resp['Image']}", width=300)
-                    else:
-                        answer = "Maaf, saya tidak menemukan informasi spesifik. Coba gunakan kata kunci lain."
+                    # Jika buntu, gunakan logika matematika internal
+                    try:
+                        p_math = prompt.lower().replace('akar', 'sqrt').replace('bagi', '/').replace('kali', '*')
+                        res = sp.sympify(p_math)
+                        answer = f"🔢 **Hasil Hitung:** {res.evalf() if res.is_number else res}"
+                    except:
+                        answer = f"Saya mengerti pertanyaan Anda tentang '{prompt}'. Namun, saya butuh informasi lebih spesifik untuk menjawabnya dengan tepat."
+                
+                response_placeholder.markdown(answer)
             except:
-                answer = "Sistem sedang sibuk, coba lagi nanti."
+                answer = "Koneksi terputus, coba lagi sebentar."
+                response_placeholder.markdown(answer)
 
-        response_container.markdown(answer)
         st.session_state.messages.append({"role": "assistant", "content": answer})
