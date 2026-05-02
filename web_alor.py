@@ -8,7 +8,7 @@ genai.configure(api_key=API_KEY)
 
 # Mencoba menggunakan model yang paling tersedia (Flash Terbaru)
 try:
-    model = genai.GenerativeModel('gemini-1.5-pro')
+    model = genai.GenerativeModel('gemini-pro')
 except:
     model = genai.GenerativeModel('gemini-pro')
 
