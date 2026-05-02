@@ -3,7 +3,7 @@ import pandas as pd
 import google.generativeai as genai
 
 # KONFIGURASI: Ganti teks di bawah dengan kode AIzaSy... yang kamu copy tadi
-API_KEY = "AIzaSyDmB0zKl1df5Dvv46ENH2RMpg3LKU8qi3U"
+API_KEY = "AIzaSyDmB0zKI1df5Dvv46ENH2RMpg3LKU8qi3U"
 genai.configure(api_key=API_KEY)
 model = genai.GenerativeModel('gemini-pro')
 
