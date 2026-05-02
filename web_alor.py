@@ -1,44 +1,54 @@
 import streamlit as st
 import pandas as pd
+import requests
 
-# Mengatur tampilan halaman web
-st.set_page_config(page_title="Alor.GPT", page_icon="🤖")
+st.set_page_config(page_title="Alor.GPT - UNTRIB", layout="wide")
 
-# Judul Aplikasi
-st.title("🤖 Alor.GPT Web")
-st.write("Sistem Cerdas Universitas Tribuana Kalabahi")
-st.markdown("---")
+st.title("Alor.GPT 🚀")
+st.write("Sistem Informasi Mahasiswa Universitas Tribuana Kalabahi")
 
-# Pilihan Menu
-menu = st.radio("Pilih Mode Pencarian:", ["Cari Data Mahasiswa UNTRIB", "Cari di Google"])
+# Mode Pencarian
+mode = st.radio("Pilih Mode Pencarian:", ["Cari Data Mahasiswa UNTRIB", "Cari di Google"])
 
-# Kotak Input (seperti kotak chat AI)
-query = st.text_input("Ketikkan pencarian...", placeholder="Misal: Nama, NIM, atau pertanyaan...")
+query = st.text_input("Ketikkkan pencarian...")
+tombol = st.button("Kirim")
 
-# Tombol Cari
-if st.button("Kirim"):
-    if query:
-        if menu == "Cari Data Mahasiswa UNTRIB":
-            try:
-                # Membaca database CSV
-                df = pd.read_csv("mahasiswa_untrib.csv")
-                
-                # Mencari data (huruf kecil/besar bebas)
-                pencarian = df[
-                    df.apply(lambda row: row.astype(str).str.contains(query, case=False).any(), axis=1)
-                ]
-                
-                if not pencarian.empty:
-                    st.success("✅ Data Ditemukan!")
-                    # Menampilkan data dalam bentuk tabel web yang rapi
-                    st.dataframe(pencarian, use_container_width=True)
-                else:
-                    st.warning("⚠️ Data mahasiswa tidak ditemukan.")
-            except FileNotFoundError:
-                st.error("File mahasiswa_untrib.csv tidak ditemukan di folder ini.")
+if tombol and query:
+    if mode == "Cari di Google":
+        st.subheader(f"🔎 Hasil Pencarian untuk: {query}")
         
-        elif menu == "Cari di Google":
-            st.info(f"🔍 Mencari informasi tentang: **{query}**")
-            st.write("*(Simulasi)*: Sistem berhasil menerima perintah pencarian Google. Kita akan sambungkan fungsinya di tahap selanjutnya!")
-    else:
-        st.error("Silakan ketik sesuatu terlebih dahulu.")
+        # Menggunakan API DuckDuckGo (Gratis dan Mudah untuk Pemula)
+        url = f"https://api.duckduckgo.com/?q={query}&format=json&pretty=1"
+        response = requests.get(url).json()
+        
+        # Menampilkan Gambar Utama jika ada
+        if response.get("Image"):
+            st.image(f"https://duckduckgo.com{response['Image']}", caption=query, width=300)
+        
+        # Menampilkan Deskripsi/Abstrak
+        if response.get("Abstract"):
+            st.info(response["Abstract"])
+            st.write(f"Sumber: {response.get('AbstractURL')}")
+        else:
+            st.warning("Maaf, detail teks tidak ditemukan. Coba kata kunci lain.")
+            
+        # Menampilkan Topik Terkait (Related Topics)
+        st.write("---")
+        st.write("### Topik Terkait:")
+        for topic in response.get("RelatedTopics", [])[:3]:
+            if "Text" in topic:
+                st.write(f"- {topic['Text']}")
+
+    elif mode == "Cari Data Mahasiswa UNTRIB":
+        # Bagian ini mengambil data dari file csv yang sudah kamu upload di GitHub
+        try:
+            df = pd.read_csv("mahasiswa_untrib.csv")
+            hasil = df[df.apply(lambda row: query.lower() in row.astype(str).str.lower().values, axis=1)]
+            
+            if not hasil.empty:
+                st.success(f"Ditemukan {len(hasil)} data mahasiswa!")
+                st.table(hasil)
+            else:
+                st.error("Data mahasiswa tidak ditemukan.")
+        except:
+            st.error("File mahasiswa_untrib.csv tidak ditemukan di server.")
