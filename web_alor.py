@@ -47,7 +47,7 @@ with st.sidebar:
     ])
 
 # 4. TAMPILAN UTAMA
-st.title("🤖 Alor.GPT Studio")
+st.title("🤖 NIMANG")
 st.caption(f"WOLATANG BERSEJARAH | {datetime.date.today().strftime('%d %B %Y')}")
 
 if "messages" not in st.session_state:
