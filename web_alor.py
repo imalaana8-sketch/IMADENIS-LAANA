@@ -9,96 +9,92 @@ API_KEY = "AIzaSyDmB0zKl1df5Dvv46ENH2RMpg3LKU8qi3U"
 genai.configure(api_key=API_KEY)
 model = genai.GenerativeModel('gemini-1.5-flash')
 
-st.set_page_config(page_title="Alor.GPT Pro Max", layout="wide")
+st.set_page_config(page_title="Alor.GPT Pro Max - Studio Kreatif", layout="wide")
 
-# 2. TAMPILAN INTERFACE (CSS EKSKLUSIF)
+# 2. TAMPILAN INTERFACE (STYLE STUDIO)
 st.markdown("""
     <style>
     .stApp { background-color: #0d1117; color: #c9d1d9; }
-    .stChatInput { bottom: 20px; }
-    .report-box { 
-        padding: 20px; 
-        border-radius: 10px; 
-        border-left: 5px solid #238636; 
-        background-color: #161b22;
-        margin-bottom: 10px;
-    }
+    .report-box { padding: 20px; border-radius: 10px; border: 1px solid #30363d; background-color: #161b22; margin-bottom: 10px; }
+    .stButton>button { width: 100%; border-radius: 5px; background-color: #238636; color: white; }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. MANAJEMEN RIWAYAT & DRAFT
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-# SIDEBAR: UNTUK UNGGAH DOKUMEN & RIWAYAT
+# 3. SIDEBAR: TOOLS KREATIF & DOKUMEN
 with st.sidebar:
-    st.title("📂 Dokumen & Arsip")
+    st.title("🎨 Alor Studio")
     
-    # Fitur Unggah Semua Jenis Dokumen
-    st.subheader("📤 Unggah File (All Formats)")
+    # Fitur Unggah Multi-Fungsi
     uploaded_file = st.file_uploader(
-        "Pilih Foto, PDF, Word, Excel, atau PPT", 
-        type=['png', 'jpg', 'jpeg', 'pdf', 'docx', 'xlsx', 'pptx', 'txt']
+        "Unggah Foto atau Dokumen", 
+        type=['png', 'jpg', 'jpeg', 'pdf', 'docx', 'xlsx', 'pptx']
     )
     
     if uploaded_file:
-        st.success(f"File '{uploaded_file.name}' berhasil dimuat!")
-        st.info("AI sekarang bisa membaca isi dokumen ini untuk ringkasan atau makalah.")
+        st.success(f"File '{uploaded_file.name}' siap diproses!")
+        if uploaded_file.type in ["image/png", "image/jpeg"]:
+            st.image(Image.open(uploaded_file), caption="Preview Foto")
 
     st.divider()
-    st.subheader("📜 Riwayat Pencarian")
-    for i, msg in enumerate(st.session_state.messages):
-        if msg["role"] == "user":
-            st.caption(f"{i+1}. {msg['content'][:30]}...")
+    st.subheader("🛠️ Fitur Edit Otomatis")
+    mode_edit = st.selectbox("Pilih Aksi Kreatif:", [
+        "Analisis Teks & Dokumen",
+        "Ubah Foto ke Anime/Kartun",
+        "Perbaiki Foto Buram (Enhance)",
+        "Ganti Background Foto",
+        "Ubah Foto Jadi Video Gerak",
+        "Video + Suara (Text-to-Speech)"
+    ])
 
 # 4. TAMPILAN UTAMA
-st.title("🤖 Alor.GPT Pro Max")
-st.write(f"📅 Tanggal Hari Ini: {datetime.date.today().strftime('%d %B %Y')}")
+st.title("🤖 Alor.GPT Studio")
+st.caption(f"Aktif di Universitas Tribuana Kalabahi | {datetime.date.today().strftime('%d %B %Y')}")
+
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# 5. LOGIKA PEMROSESAN MAKALAH & RINGKASAN
-if prompt := st.chat_input("Contoh: 'Buatkan makalah tentang IT' atau 'Ringkas file ini'"):
+# 5. LOGIKA PEMROSESAN SUPER AI
+if prompt := st.chat_input("Berikan instruksi (contoh: 'Ganti background ke pantai' atau 'Buat makalah')"):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        response_placeholder = st.empty()
+        full_response = ""
         
-        # Instruksi Khusus Makalah & Ringkasan Eksklusif
-        now = datetime.datetime.now()
+        # Konteks Khusus Studio Kreatif
         context = f"""
-        Kamu adalah Alor.GPT Pro Max. 
-        Tugas khusus:
-        1. Jika diminta membuat MAKALAH: Gunakan struktur (Kata Pengantar, Bab 1 Pendahuluan, Bab 2 Pembahasan, Bab 3 Penutup). 
-           Wajib sertakan Daftar Pustaka dengan alamat URL, tahun {now.year}, dan catatan kaki (footnote).
-        2. Jika ada file PPT/Excel/Doc: Berikan ringkasan eksklusif dalam format tabel atau list yang sangat rapi.
-        3. Gunakan bahasa Indonesia yang formal namun cerdas.
-        4. Referensi harus otomatis mencantumkan tanggal akses hari ini: {now.strftime('%d-%m-%Y')}.
+        Kamu adalah Alor.GPT Studio Kreatif. 
+        Tugas:
+        1. Mode Anime/Video: Jelaskan cara AI memproses transformasi visual dari foto ke anime.
+        2. Mode Enhance: Berikan instruksi teknis untuk menajamkan bagian foto yang buram.
+        3. Background: Simulasikan perubahan latar belakang sesuai permintaan user.
+        4. Text-to-Video: Buatkan naskah dan deskripsi gerakan video beserta narasi suara yang sesuai ketikan user.
+        5. Akademik: Tetap sediakan fitur Makalah Bab 1-3 lengkap dengan sumber dan catatan kaki.
         """
 
         try:
-            # Gabungkan input dengan file jika ada
             if uploaded_file:
-                # Mengirimkan informasi nama file ke AI sebagai konteks
-                user_input = f"User mengunggah file: {uploaded_file.name}. Instruksi: {prompt}"
-                response = model.generate_content([context, user_input])
+                # Memproses Foto/Dokumen dengan instruksi edit
+                response = model.generate_content([f"MODE: {mode_edit}. INSTRUKSI: {prompt}. CONTEXT: {context}", Image.open(uploaded_file) if "image" in uploaded_file.type else uploaded_file.name])
             else:
                 response = model.generate_content(context + prompt)
             
             full_response = response.text
             
-            # Tampilkan dalam kotak eksklusif jika ini ringkasan/makalah
-            if "Bab 1" in full_response or "Ringkasan" in full_response:
-                st.markdown(f'<div class="report-box">{full_response}</div>', unsafe_allow_html=True)
+            # Tampilan hasil eksklusif
+            if "Video" in mode_edit or "Anime" in mode_edit:
+                st.info(f"✨ Memproses Mode: {mode_edit}...")
+                st.markdown(f'<div class="report-box"><b>Hasil Studio:</b><br>{full_response}</div>', unsafe_allow_html=True)
             else:
                 st.markdown(full_response)
                 
         except Exception as e:
-            full_response = f"⚠️ Maaf, sistem sedang memproses file besar. Eror: {str(e)}"
+            full_response = f"⚠️ Kendala Studio: {str(e)}"
             st.markdown(full_response)
 
         st.session_state.messages.append({"role": "assistant", "content": full_response})
